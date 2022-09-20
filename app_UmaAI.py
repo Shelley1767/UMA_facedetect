@@ -41,7 +41,7 @@ def detect(image, _model, _le, namelist):
         #顔の部分を四角で囲む(ファルコは丸)
         if label == 'falcon' or label == 'falcon_y':
             cen_x = math.ceil(x+w/2)
-            cen_y = math.ceil(y+h/3)
+            cen_y = math.ceil(y+h/3.3)
             rad = math.ceil(w/2)
             cv2.circle(image, (cen_x,cen_y), rad, color=(0,0,255), thickness=3)
         else:
