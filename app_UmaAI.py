@@ -38,10 +38,6 @@ def detect(image, _model, _le, namelist):
         target_id = namelist.index(label)
         st.session_state['count{}'.format(target_id)] += 1
 
-        st.write(label)
-        st.write(label=='falcon')
-        st.write(label=='falcon_y')
-
         #顔の部分を四角で囲む(ファルコは丸)
         if label == 'falcon' or label == 'falcon_y':
             cen_x = math.ceil(x+w/2)
