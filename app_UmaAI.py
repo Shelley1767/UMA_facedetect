@@ -25,8 +25,7 @@ def detect(image, _model, _le, namelist):
     faces = classifier.detectMultiScale(gray_image)
       
     for x,y,w,h in faces:
-        #顔の部分を四角で囲む
-        cv2.rectangle(image, (x,y), (x+w,y+h), color=(0,0,255), thickness=3)
+
         #分類器モデルに入れるための処理
         face_image = image[y:y+h, x:x+h]
         face_image_resize = cv2.resize(face_image, (64, 64))
@@ -38,6 +37,19 @@ def detect(image, _model, _le, namelist):
         #キャラクターカウンタを増加させる
         target_id = namelist.index(label)
         st.session_state['count{}'.format(target_id)] += 1
+
+        st.write(label)
+        st.write(label=='falcon')
+        st.write(label=='falcon_y')
+
+        #顔の部分を四角で囲む(ファルコは丸)
+        if label == 'falcon' or label == 'falcon_y':
+            cen_x = math.ceil(x+w/2)
+            cen_y = math.ceil(y+h/3)
+            rad = math.ceil(w/2)
+            cv2.circle(image, (cen_x,cen_y), rad, color=(0,0,255), thickness=3)
+        else:
+            cv2.rectangle(image, (x,y), (x+w,y+h), color=(0,0,255), thickness=3)
 
         #元画像の顔の上(x, y)地点に予測ラベルを描画
         cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_COMPLEX, width/500, (0, 0, 255), math.ceil(width/1000), cv2.LINE_AA)
@@ -75,6 +87,7 @@ def chara_counter_init(namelist):
 
 
 def main():
+    detect.clear()
 
     st.set_page_config(layout="wide")
 
