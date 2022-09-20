@@ -83,7 +83,7 @@ def chara_counter_init(namelist):
 
 
 def main():
-    detect.clear()
+
 
     st.set_page_config(layout="wide")
 
