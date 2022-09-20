@@ -84,8 +84,13 @@ def chara_counter_init(namelist):
 
 def main():
 
-
     st.set_page_config(layout="wide")
+
+    #最初にキャッシュを消去
+    if 'init' not in st.session_state: 
+        st.session_state['init'] = 0 
+        detect.clear()
+    
 
     #タイトルの表示
     st.title("ウマ娘 顔認識アプリ")
