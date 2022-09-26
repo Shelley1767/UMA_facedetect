@@ -9,7 +9,9 @@ import os
 import math
 import pickle
 import pandas as pd
+import base64
 
+#顔判別
 @st.experimental_memo
 def detect(image, _model, _le, namelist):
     image = Image.open(image)
@@ -53,6 +55,7 @@ def detect(image, _model, _le, namelist):
     
     return image
 
+#キャラクターカウンタの表示
 def chara_counter(namelist):
     for i, name in enumerate(namelist):
         statename = 'count{}'.format(i)
@@ -75,10 +78,23 @@ def chara_counter(namelist):
         with col_2nd:
             st.write(st.session_state[statename])
 
+#カウンタの初期化
 def chara_counter_init(namelist):
     for i, name in enumerate(namelist):
         statename = 'count{}'.format(i)
         st.session_state[statename] = 0
+
+#カウンタのcsv出力
+def csv_output(namelist):
+    count_list = []
+    for i, name in enumerate(namelist):
+        statename = 'count{}'.format(i)
+        count_list.append(st.session_state[statename])
+    df = pd.DataFrame((zip(namelist, count_list)), columns = ['Name', 'Count'])
+    csv = df.to_csv(index=False) 
+
+    return(csv)
+
 
 
 
@@ -148,7 +164,15 @@ def main():
 
     #キャラクターカウンタの生成
     chara_counter(namelist)
+
+    #カウンタ出力
+    csv = csv_output(namelist)  
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:application/octet-stream;base64,{b64}" download="result.csv">download</a>'
+    st.sidebar.markdown(f" <br> カウント結果をダウンロードする <br> {href}", unsafe_allow_html=True)
  
+
+
 
 
 if __name__ == "__main__":
