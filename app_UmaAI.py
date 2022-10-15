@@ -25,6 +25,9 @@ def detect(image, _model, _le, namelist):
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     classifier = cv2.CascadeClassifier('./lbpcascade_animeface/lbpcascade_animeface.xml')
     faces = classifier.detectMultiScale(gray_image)
+
+    label_list = []
+    label2_list = []
       
     for x,y,w,h in faces:
 
@@ -34,8 +37,12 @@ def detect(image, _model, _le, namelist):
         X = face_image_resize.astype('float32') / 255
         #モデルの予測ラベルを取得
         label = _model.predict(X.reshape(-1, 64, 64, 3))
+        label2 = np.where(label[0]==np.sort(label[0])[-2])
         label = np.argmax(label, axis=1)
         label = _le.inverse_transform(label)[0]
+        label2 = _le.inverse_transform(label2)[0]
+        label_list.append(label)
+        label2_list.append(label2)
         #キャラクターカウンタを増加させる
         target_id = namelist.index(label)
         st.session_state['count{}'.format(target_id)] += 1
@@ -52,8 +59,30 @@ def detect(image, _model, _le, namelist):
         #元画像の顔の上(x, y)地点に予測ラベルを描画
         cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_COMPLEX, width/500, (0, 0, 255), math.ceil(width/1000), cv2.LINE_AA)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+    res_list = [image, label_list, label2_list]
     
-    return image
+    return res_list
+
+#第2候補への修正提案
+def maybe(det_res, namelist):
+    st.write("もしかして…")
+    for i, name in enumerate(det_res[1]):
+        name1 = det_res[1][i]
+        name2 = det_res[2][i]
+        col_1st, col_2nd = st.columns(2)
+        with col_1st:
+            st.write("{}じゃなくて{}".format(name1,name2))
+        with col_2nd:
+            if st.button("カウンタ修正", key=i+1000):
+                i1 = namelist.index(name1)
+                i2 = namelist.index(name2)
+                statename1 = 'count{}'.format(i1)
+                statename2 = 'count{}'.format(i2)
+                st.session_state[statename1] -= 1
+                st.session_state[statename2] += 1
+
+
 
 #キャラクターカウンタの表示
 def chara_counter(namelist):
@@ -140,8 +169,10 @@ def main():
 
     #画像ファイルが読み込まれた後，顔認識を実行
     if image != None:
-        image = detect(image, model, le, namelist)
-        st.image(image, use_column_width=True)
+        det_res = detect(image, model, le, namelist)
+        image = det_res[0]
+        st.image(image, use_column_width='always')
+        maybe(det_res, namelist)
 
     col_left, col_right= st.columns(2)
     with col_left:
