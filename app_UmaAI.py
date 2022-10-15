@@ -152,13 +152,20 @@ def main():
     '''
     )
 
-    #サイドバーの表示
-    image = st.sidebar.file_uploader("画像をアップロードしてください", type=['jpg','jpeg', 'png'], accept_multiple_files=False)
+    #サイドバーの表示：単一画像
+    st.sidebar.markdown('''### 単一画像アップロード''')
+    image = st.sidebar.file_uploader('こちらから画像をアップロードしてください',type=['jpg','jpeg', 'png'], accept_multiple_files=False)
 
     #サンプル画像を使用する場合
     use_sample = st.sidebar.checkbox("サンプル画像を使用する")
     if use_sample:
         image = "sample.jpeg"
+    st.sidebar.markdown('')
+    st.sidebar.markdown('')
+
+    #サイドバーの表示：複数画像
+    st.sidebar.markdown('''### 複数画像アップロード''')
+    image_m = st.sidebar.file_uploader("複数画像の場合はこちら", type=['jpg','jpeg', 'png'], accept_multiple_files=True)
 
     #保存済みのモデルをロード
     model = tf.keras.models.load_model('saved_model/my_model.h5')
@@ -169,28 +176,59 @@ def main():
     namelist = pd.read_csv('umanames.csv',index_col=False, header=None)
     namelist = list(namelist[0])
 
-    #画像ファイルが読み込まれた後，顔認識を実行
+    #複数の画像ファイルが読み込まれた後，そのうちの一つを認識対象とする
+    if len(image_m) != 0 :
+        if 'page' not in st.session_state:
+            st.session_state['page'] = 0
+        st.markdown('')
+        col_1st, col_2nd, col_3rd = st.columns(3)
+        with col_1st:
+            if st.button("<"):
+                if st.session_state['page'] != 0:
+                    st.session_state['page'] -= 1
+
+        with col_3rd:
+            if st.button(">"):
+                if st.session_state['page'] != len(image_m)-1:
+                    st.session_state['page'] += 1
+
+        with col_2nd:
+            if st.session_state['page'] > len(image_m)-1:
+                st.session_state['page'] = len(image_m)-1
+            st.markdown(f''' {st.session_state['page']+1}/{len(image_m)}''')
+
+        st.markdown(f''' 【{image_m[st.session_state['page']].name}】''')
+        image = image_m[st.session_state['page']]
+
+    #画像ファイルが読み込まれた後，顔認識を実行し結果を表示
     if image != None:
         det_res = detect(image, model, le, namelist)
         image = det_res[0]
-        st.image(image, use_column_width='always')
+        h, w = image.shape[:2]
+        if w > 500:
+            width = 500
+            height = round(h * (width / w))
+            image = cv2.resize(image, dsize=(width, height))
+        st.image(image, use_column_width='auto')
         maybe(det_res, namelist)
 
+
+    #カウンタの見出しとクリアボタン
+    st.markdown('')
+    st.markdown('')
     col_left, col_right= st.columns(2)
     with col_left:
-            st.markdown("""
-            ### カウンタ
-            """)
+            st.markdown("""### カウンタ""")
 
     with col_right:
-        if st.button("Clear"):
+        if st.button("All Clear"):
             detect.clear()
             chara_counter_init(namelist)
 
     #カウンタの説明の表示
     st.markdown(
     '''
-        検出したウマ娘をカウントします。   
+        検出したウマ娘をカウントします。
         検出結果が間違っている場合はボタンを押すことで手動で修正が行えます。  
     '''
     )
@@ -198,11 +236,14 @@ def main():
     #キャラクターカウンタの生成
     chara_counter(namelist)
 
-    #カウンタ出力
+    #カウント結果のダウンロード
     csv = csv_output(namelist)  
     b64 = base64.b64encode(csv.encode()).decode()
     href = f'<a href="data:application/octet-stream;base64,{b64}" download="result.csv">Download</a>'
-    st.sidebar.markdown(f" <br> カウント結果をダウンロードする <br> {href}", unsafe_allow_html=True)
+    st.sidebar.markdown('')
+    st.sidebar.markdown('')
+    st.sidebar.markdown('''### カウント結果のダウンロード''')
+    st.sidebar.markdown(f" {href}", unsafe_allow_html=True)
  
 
 
