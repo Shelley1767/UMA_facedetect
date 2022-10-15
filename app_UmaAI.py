@@ -57,7 +57,7 @@ def detect(image, _model, _le, namelist):
             cv2.rectangle(image, (x,y), (x+w,y+h), color=(0,0,255), thickness=3)
 
         #元画像の顔の上(x, y)地点に予測ラベルを描画
-        cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_COMPLEX, width/500, (0, 0, 255), math.ceil(width/1000), cv2.LINE_AA)
+        cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_COMPLEX, width/700, (0, 0, 255), max(2,math.ceil(width/1000)), cv2.LINE_AA)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
     res_list = [image, label_list, label2_list]
@@ -199,7 +199,7 @@ def main():
     #カウンタ出力
     csv = csv_output(namelist)  
     b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:application/octet-stream;base64,{b64}" download="result.csv">download</a>'
+    href = f'<a href="data:application/octet-stream;base64,{b64}" Download="result.csv">download</a>'
     st.sidebar.markdown(f" <br> カウント結果をダウンロードする <br> {href}", unsafe_allow_html=True)
  
 
