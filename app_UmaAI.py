@@ -10,6 +10,9 @@ import math
 import pickle
 import pandas as pd
 import base64
+import sys
+sys.path.append('./anime-face-detector-main')
+import detect_anime_face as daf
 
 #顔判別
 @st.experimental_memo
@@ -22,9 +25,12 @@ def detect(image, _model, _le, namelist):
     height, width = image.shape[:2]
     size = (width, height)
         
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    classifier = cv2.CascadeClassifier('./lbpcascade_animeface/lbpcascade_animeface.xml')
-    faces = classifier.detectMultiScale(gray_image)
+    #gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #classifier = cv2.CascadeClassifier('./lbpcascade_animeface/lbpcascade_animeface.xml')
+    #faces_ori = classifier.detectMultiScale(gray_image)
+
+    faces = daf.main(image)
+
 
     label_list = []
     label2_list = []
@@ -48,7 +54,7 @@ def detect(image, _model, _le, namelist):
         st.session_state['count{}'.format(target_id)] += 1
 
         #顔の部分を四角で囲む(ファルコは丸)
-        if label == 'falcon' or label == 'falcon_y':
+        if label == 'falcon' or label == 'falcon_yel':
             cen_x = math.ceil(x+w/2)
             cen_y = math.ceil(y+h/3.3)
             rad = math.ceil(w/2)
@@ -60,6 +66,11 @@ def detect(image, _model, _le, namelist):
         thick = max(1,math.ceil(width/800))
         cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_DUPLEX, width/700, (255, 255, 255), thick+1, cv2.LINE_AA)
         cv2.putText(image, label, (x, y-30), cv2.FONT_HERSHEY_DUPLEX, width/700, (0, 0, 255), thick, cv2.LINE_AA)
+    
+    #for x,y,w,h in faces_ori:
+    #    cv2.rectangle(image, (x,y), (x+w,y+h), color=(0,255,0), thickness=3)
+
+    
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
     res_list = [image, label_list, label2_list]
@@ -148,7 +159,6 @@ def main():
         ウマ娘の顔を識別するアプリです。   
         チャンミのリザルト画面に特化した学習をしてるので  
         それ以外のシーンだと上手く認識しないと思います。  
-        ※ライス・カフェ・ウオッカ等顔が隠れているキャラは現状認識できないです。
     '''
     )
 
